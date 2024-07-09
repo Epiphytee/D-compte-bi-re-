@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Décompte de Bières</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        input, button { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Décompte de Bières</h1>
+    <div id="nameInput">
+        <input type="text" id="name" placeholder="Votre nom">
+        <button onclick="saveName()">Enregistrer</button>
+    </div>
+    <div id="beerCount" style="display:none;">
+        <p>Bonjour <span id="userName"></span> !</p>
+        <input type="number" id="beers" min="0" value="0">
+        <button onclick="addBeers()">Ajouter des bières</button>
+    </div>
+    <p id="total"></p>
+
+    <script>
+        let userName = localStorage.getItem('userName');
+        if (userName) {
+            document.getElementById('nameInput').style.display = 'none';
+            document.getElementById('beerCount').style.display = 'block';
+            document.getElementById('userName').textContent = userName;
+            updateTotal();
+        }
+
+        function saveName() {
+            userName = document.getElementById('name').value;
+            if (userName) {
+                localStorage.setItem('userName', userName);
+                document.getElementById('nameInput').style.display = 'none';
+                document.getElementById('beerCount').style.display = 'block';
+                document.getElementById('userName').textContent = userName;
+                updateTotal();
+            }
+        }
+
+        function addBeers() {
+            let beers = parseInt(document.getElementById('beers').value);
+            let total = parseInt(localStorage.getItem(userName) || 0);
+            total += beers;
+            localStorage.setItem(userName, total);
+            updateTotal();
+        }
+
+        function updateTotal() {
+            let total = localStorage.getItem(userName) || 0;
+            document.getElementById('total').textContent = `Total de bières prises : ${total}`;
+        }
+    </script>
+</body>
+</html>
