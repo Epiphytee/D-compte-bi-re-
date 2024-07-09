@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Décompte de Bières</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        input, button { margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Décompte de Bières</h1>
+    <div id="nameInput">
+        <input type="text" id="name" placeholder="Votre nom">
+        <button onclick="saveName()">Enregistrer</button>
+    </div>
+    <div id="beerCount" style="display:none;">
+        <p>Bonjour <span id="userName"></span> !</p>
+        <input type="number" id="beers" min="0" value="0">
+        <button onclick="addBeers()">Ajouter des bières</button>
+    </div>
+    <p id="total"></p>
+    <table id="beerTable">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <!-- Les noms seront ajoutés dynamiquement ici -->
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Les données seront ajoutées dynamiquement ici -->
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><strong>Total</strong></td>
+                <!-- Les totaux seront ajoutés dynamiquement ici -->
+            </tr>
+        </tfoot>
+    </table>
+
+    <script>
+        let userName = localStorage.getItem('userName');
+        let beerData = JSON.parse(localStorage.getItem('beerData')) || {};
+
+        if (userName) {
+            document.getElementById('nameInput').style.display = 'none';
+            document.getElementById('beerCount').style.display = 'block';
+            document.getElementById('userName').textContent = userName;
+            updateTotal();
+        }
+
+        function saveName() {
+            userName = document.getElementById('name').value;
+            if (userName) {
+                localStorage.setItem('userName', userName);
+                document.getElementById('nameInput').style.display = 'none';
+                document.getElementById('beerCount').style.display = 'block';
+                document.getElementById('userName').textContent = userName;
+                updateTotal();
+                updateTable();
+            }
+        }
+
+        function addBeers() {
+            let beers = parseInt(document.getElementById('beers').value);
+            if (beers > 0) {
+                let date = new Date().toISOString().split('T')[0];
+                if (!beerData[userName]) {
+                    beerData[userName] = [];
+                }
+                beerData[userName].push({date: date, beers: beers});
+                localStorage.setItem('beerData', JSON.stringify(beerData));
+                updateTotal();
+                updateTable();
+            }
+        }
+
+        function updateTotal() {
+            let total = (beerData[userName] || []).reduce((sum, entry) => sum + entry.beers, 0);
+            document.getElementById('total').textContent = `Total de bières prises : ${total}`;
+        }
+
+        function updateTable() {
+            let table = document.getElementById('beerTable');
+            let thead = table.getElementsByTagName('thead')[0];
+            let tbody = table.getElementsByTagName('tbody')[0];
+            let tfoot = table.getElementsByTagName('tfoot')[0];
+
+            // Clear existing data
+            thead.rows[0].innerHTML = '<th>Date</th>';
+            tbody.innerHTML = '';
+            tfoot.rows[0].innerHTML = '<td><strong>Total</strong></td>';
+
+            // Add headers
+            for (let name in beerData) {
+                let th = document.createElement('th');
+                th.textContent = name;
+                thead.rows[0].appendChild(th);
+            }
+
+            // Get all unique dates
+            let allDates = [...new Set([].concat(...Object.values(beerData).map(entries => entries.map(e => e.date))))].sort();
+
+            // Add data rows
+            allDates.forEach(date => {
+                let row = tbody.insertRow();
+                row.insertCell().textContent = date;
+                for (let name in beerData) {
+                    let cell = row.insertCell();
+                    let entry = beerData[name].find(e => e.date === date);
+                    cell.textContent = entry ? entry.beers : '';
+                }
+            });
+
+            // Add totals
+            let grandTotal = 0;
+            for (let name in beerData) {
+                let total = beerData[name].reduce((sum, entry) => sum + entry.beers, 0);
+                tfoot.rows[0].insertCell().textContent = total;
+                grandTotal += total;
+            }
+            let grandTotalCell = tfoot.rows[0].insertCell();
+            grandTotalCell.textContent = grandTotal;
+            grandTotalCell.style.fontWeight = 'bold';
+        }
+
+        updateTable();
+    </script>
+</body>
+</html>
